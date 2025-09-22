@@ -82,7 +82,7 @@ const handleSubmit = async () => {
     body: JSON.stringify({
       patient_id: patientData.id,
       therapy_id: selectedTherapy.id,
-      staff_id: selectedDoctor.id,
+      Doctor_id: selectedDoctor.id,
       date: selectedDate,
       time: formattedTime
     })
