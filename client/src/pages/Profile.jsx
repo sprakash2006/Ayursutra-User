@@ -10,7 +10,7 @@ import {
   Edit3,
   BookOpen,
   Clock,
-  CheckCircle
+  Star
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,6 +23,8 @@ const Profile = () => {
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [bookings, setBookings] = useState([]);
+  const [records, setRecords] = useState([]);
 
   const user = JSON.parse(sessionStorage.getItem("user") || "{}");
   const userId = user?.id;
@@ -94,27 +96,46 @@ const Profile = () => {
     }
   };
 
-  // Hardcoded demo data
-  const upcomingAppointments = [
-    {
-      id: 1,
-      therapy: "Vamana Therapy Consultation",
-      date: "2025-09-25",
-      time: "10:00 AM",
-      doctor: "Dr. Rajesh Vaidya",
-      location: "AyurSutra Centre - Mumbai",
-      status: "Confirmed"
-    },
-    {
-      id: 2,
-      therapy: "Virechana Treatment",
-      date: "2025-10-02",
-      time: "2:00 PM",
-      doctor: "Dr. Meera Patel",
-      location: "AyurSutra Centre - Pune",
-      status: "Pending"
+
+  useEffect(() => {
+    const fetchBookingData = async () => {
+      try {
+        const res = await fetch(`http://localhost:5000/api/patient/userBookings/${userId}`);
+        if (!res.ok) throw new Error("Failed to fetch user bookings");
+
+        const data = await res.json();
+        setBookings(data); // directly set state
+      } catch (err) {
+        console.error("Error fetching user bookings:", err.message);
+        setBookings([]); // fallback empty
+      }
+    };
+
+    if (userId) {
+      fetchBookingData();
     }
-  ];
+  }, [userId]);
+
+  useEffect(() => {
+    const fetchRecordData = async () => {
+      try {
+        const res = await fetch(`http://localhost:5000/api/patient/userRecords/${userId}`);
+        if (!res.ok) throw new Error("Failed to fetch user bookings");
+
+        const data = await res.json();
+        setRecords(data); // directly set state
+      } catch (err) {
+        console.error("Error fetching user bookings:", err.message);
+        setRecords([]); // fallback empty
+      }
+    };
+
+    if (userId) {
+      fetchRecordData();
+    }
+  }, [userId]);
+
+
 
   const treatmentHistory = [
     {
@@ -280,15 +301,15 @@ const Profile = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      {upcomingAppointments.map((appointment) => (
+                      {bookings.map((appointment) => (
                         <div key={appointment.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
                           <div className="flex flex-col md:flex-row md:items-center justify-between space-y-2 md:space-y-0">
                             <div>
-                              <h3 className="font-semibold text-lg">{appointment.therapy}</h3>
-                              <p className="text-gray-600">with {appointment.doctor}</p>
+                              <h3 className="font-semibold text-lg">{appointment.therapyName}</h3>
+                              <p className="text-gray-600">with {appointment.doctorName}</p>
                               <p className="text-sm text-gray-500">
                                 <MapPin className="w-3 h-3 inline mr-1" />
-                                {appointment.location}
+                                {appointment.doctorLocation}
                               </p>
                             </div>
                             <div className="text-right">
@@ -299,8 +320,8 @@ const Profile = () => {
                                 </span>
                               </div>
                               <Badge
-                                variant={appointment.status === "Confirmed" ? "default" : "outline"}
-                                className={appointment.status === "Confirmed" ? "bg-green-500" : "border-yellow-500 text-yellow-700"}
+                                variant={appointment.status === "Pending" ? "default" : "outline"}
+                                className={appointment.status === "Pending" ? "bg-green-500" : "border-yellow-500 text-yellow-700"}
                               >
                                 {appointment.status}
                               </Badge>
@@ -314,7 +335,11 @@ const Profile = () => {
               </motion.div>
 
               {/* Treatment History */}
-              <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 }}
+              >
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center text-purple-700">
@@ -324,23 +349,55 @@ const Profile = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      {treatmentHistory.map((treatment) => (
-                        <div key={treatment.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                      {records.map((treatment) => (
+                        <div
+                          key={treatment.recordId}
+                          className="border rounded-lg p-4 hover:shadow-md transition-shadow"
+                        >
                           <div className="flex flex-col md:flex-row md:items-center justify-between space-y-2 md:space-y-0">
+                            {/* Left side info */}
                             <div>
-                              <h3 className="font-semibold text-lg">{treatment.therapy}</h3>
-                              <p className="text-gray-600">with {treatment.doctor}</p>
-                              <p className="text-sm text-gray-500">Duration: {treatment.duration}</p>
+                              <h3 className="font-semibold text-lg">{treatment.therapyName}</h3>
+                              <p className="text-gray-600">
+                                with {treatment.doctorName} at {treatment.doctorLocation}
+                              </p>
+
+                              {/* Notes Section */}
+                              <div className="mt-2 space-y-1">
+                                <p className="text-sm text-gray-700">
+                                  <strong>Medical Notes:</strong> {treatment.medicalNotes || "—"}
+                                </p>
+                                <p className="text-sm text-gray-700 flex items-center">
+                                  <strong>Patient Notes:</strong>&nbsp; 
+                                  {treatment.patientNotes || "—"}
+                                  <button
+                                    className="ml-2 text-blue-600 hover:text-blue-800"
+                                    onClick={() => handleEditNotes(treatment)}
+                                  >
+                                    <Edit3 className="w-4 h-4" />
+                                  </button>
+                                </p>
+                              </div>
                             </div>
+
+                            {/* Right side info */}
                             <div className="text-right">
-                              <p className="text-sm text-gray-500 mb-2">{treatment.date}</p>
-                              <div className="flex items-center space-x-2">
-                                <Badge variant="outline" className="border-green-300 text-green-700">
+                              <p className="text-sm text-gray-500 mb-2">
+                                {treatment.date} at {treatment.time}
+                              </p>
+                              <div className="flex items-center space-x-2 justify-end">
+                                <Badge
+                                  variant="outline"
+                                  className="border-green-300 text-green-700"
+                                >
                                   {treatment.result}
                                 </Badge>
                                 <div className="flex items-center">
-                                  {[...Array(treatment.rating)].map((_, i) => (
-                                    <CheckCircle key={i} className="w-4 h-4 text-yellow-500 fill-current" />
+                                  {[...Array(Number(treatment.doctorRating) || 0)].map((_, i) => (
+                                    <Star
+                                      key={i}
+                                      className="w-4 h-4 text-yellow-500 fill-current"
+                                    />
                                   ))}
                                 </div>
                               </div>
@@ -352,6 +409,7 @@ const Profile = () => {
                   </CardContent>
                 </Card>
               </motion.div>
+
             </div>
           </div>
         </div>
