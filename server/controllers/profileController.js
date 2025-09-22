@@ -41,3 +41,81 @@ export const updatePatient = async (req, res) => {
 
   res.json(data);
 };
+
+
+
+export const getUserBookings = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const { data, error } = await supabase
+      .from("bookings")
+      .select(`
+        id,
+        date,
+        time,
+        status,
+        therapies:therapy_id (name),
+        doctors:Doctor_id (name, location)
+      `)
+      .eq("patient_id", userId);  // filter by userId
+
+    if (error) throw error;
+
+    // Format response
+    const formatted = data.map(b => ({
+      bookingId: b.id,
+      therapyName: b.therapies?.name,
+      doctorName: b.doctors?.name,
+      doctorLocation: b.doctors?.location,
+      date: b.date,
+      time: b.time,
+      status: b.status
+    }));
+
+    res.json(formatted);
+  } catch (err) {
+    console.error("Error fetching bookings:", err.message);
+    res.status(500).json({ error: "Failed to fetch bookings" });
+  }
+};
+
+export const getUserRecords = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const { data, error } = await supabase
+      .from("records")
+      .select(`
+        id,
+        date,
+        time,
+        therapy,
+        doctors:doctor_id(name,location),
+        medical_notes,
+        patient_notes,
+        doctor_rating
+      `)
+      .eq("patient_id", userId);  // filter by userId
+
+    if (error) throw error;
+
+    // Format response
+    const formatted = data.map(b => ({
+      recordId: b.id,
+      date: b.date,
+      time: b.time,
+      therapyName: b.therapy,
+      doctorName: b.doctors?.name,
+      doctorLocation: b.doctors?.location,
+      medicalNotes: b.medical_notes,
+      patientNotes: b.patient_notes,
+      doctorRating: b.doctor_rating
+    }));
+
+    res.json(formatted);
+  } catch (err) {
+    console.error("Error fetching bookings:", err.message);
+    res.status(500).json({ error: "Failed to fetch bookings" });
+  }
+};
