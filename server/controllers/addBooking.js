@@ -39,14 +39,14 @@ export const getDoctors = async (req, res) => {
 
   export const createBooking = async (req, res) => {
     try {
-      const { patient_id, therapy_id, staff_id, date, time } = req.body;
+      const { patient_id, therapy_id, Doctor_id, date, time } = req.body;
   
       const { data, error } = await supabase
         .from('bookings')
         .insert([{
           patient_id,
           therapy_id,
-          staff_id,
+          Doctor_id,
           date,
           time,
           status: 'Pending',
