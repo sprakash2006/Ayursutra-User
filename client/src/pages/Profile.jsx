@@ -17,6 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import Navigation from "@/components/Navigation";
+import Loader from "../components/Loading";
 
 const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
@@ -158,7 +159,7 @@ const Profile = () => {
     }
   ];
 
-  if (loading) return <p className="text-center mt-20">Loading...</p>;
+  if (loading) return <Loader />;
   if (error) return <p className="text-center mt-20 text-red-500">{error}</p>;
   if (!userProfile) return null;
 
