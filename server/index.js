@@ -3,12 +3,12 @@ import express from "express";
 import morgan from "morgan";
 import cors from "cors";
 import authRoutes from "./routes/loginRoutes.js";
-import profileRoutes from "./routes/profileRoutes.js"
-import addBookingRoutes from "./routes/addBookingRoutes.js"
+import profileRoutes from "./routes/profileRoutes.js";
+import addBookingRoutes from "./routes/addBookingRoutes.js";
+import notificationsRoutes from "./routes/notificationsRoutes.js";
 
 // dotenv.config();
 const app = express();
-
 
 // Middleware
 app.use(express.json());
@@ -17,8 +17,9 @@ app.use(morgan("dev"));
 
 // Routes
 app.use("/api/auth", authRoutes);
-app.use('/api/patient', profileRoutes);
+app.use("/api/patient", profileRoutes);
 app.use("/api/addBookings", addBookingRoutes);
+app.use("/api/notification", notificationsRoutes);
 
 // Start Server
 const PORT = process.env.PORT || 5000;
