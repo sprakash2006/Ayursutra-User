@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import Navigation from '@/components/Navigation';
+import { useNavigate } from "react-router-dom";
 
 const Booking = () => {
   const [therapies, setTherapies] = useState([]);
@@ -23,6 +24,8 @@ const Booking = () => {
   const [selectedTime, setSelectedTime] = useState('');
   const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [currentStep, setCurrentStep] = useState(1);
+
+  const navigate = useNavigate();
 
   const timeSlots = [
     '09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM',
@@ -89,7 +92,10 @@ const handleSubmit = async () => {
   });
 
   const data = await response.json();
-  if (response.ok) alert("Booking confirmed!");
+  if (response.ok) {
+    alert("Booking confirmed!");
+    navigate("/profile");
+  }
   else alert("Failed: " + data.error);
 };
 

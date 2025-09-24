@@ -1,5 +1,28 @@
 import { supabase } from "../supabaseClient.js";
 
+// ✅ Utility: format "time ago"
+function formatTimeAgo(dateString) {
+  const createdAt = new Date(dateString);
+  const now = new Date();
+
+  const diffMs = now - createdAt;
+  const diffSec = Math.floor(diffMs / 1000);
+  const diffMin = Math.floor(diffSec / 60);
+  const diffHr = Math.floor(diffMin / 60);
+  const diffDay = Math.floor(diffHr / 24);
+  const diffWeek = Math.floor(diffDay / 7);
+  const diffMonth = Math.floor(diffDay / 30);
+  const diffYear = Math.floor(diffDay / 365);
+
+  if (diffSec < 60) return "just now";
+  if (diffMin < 60) return diffMin === 1 ? "1 min ago" : `${diffMin} mins ago`;
+  if (diffHr < 24) return diffHr === 1 ? "1 hour ago" : `${diffHr} hours ago`;
+  if (diffDay < 7) return diffDay === 1 ? "yesterday" : `${diffDay} days ago`;
+  if (diffWeek < 5) return diffWeek === 1 ? "1 week ago" : `${diffWeek} weeks ago`;
+  if (diffMonth < 12) return diffMonth === 1 ? "1 month ago" : `${diffMonth} months ago`;
+  return diffYear === 1 ? "1 year ago" : `${diffYear} years ago`;
+}
+
 export const getNotificationsByPatient = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -10,9 +33,7 @@ export const getNotificationsByPatient = async (req, res) => {
 
     const { data, error } = await supabase
       .from("notifications")
-      .select(
-        "id, type, title, message, isread, priority, icon, color, created_at"
-      )
+      .select("id, type, title, message, isread, priority, icon, color, created_at")
       .eq("patient_id", userId)
       .order("created_at", { ascending: false });
 
@@ -23,8 +44,8 @@ export const getNotificationsByPatient = async (req, res) => {
       type: n.type,
       title: n.title,
       message: n.message,
-      created_at: n.created_at,
-      isRead: n.isread === "yes", // ✅ normalized boolean
+      timeAgo: formatTimeAgo(n.created_at), // ✅ only send relative time
+      isRead: n.isread === true || n.isread === "yes",
       priority: n.priority,
       icon: n.icon,
       color: n.color,
@@ -32,6 +53,7 @@ export const getNotificationsByPatient = async (req, res) => {
 
     res.status(200).json({ success: true, notifications });
   } catch (err) {
+    console.error("Error fetching notifications:", err.message || err);
     res.status(500).json({ success: false, error: err.message });
   }
 };
