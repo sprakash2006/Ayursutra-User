@@ -37,7 +37,7 @@ import TherapyDetailModal from '@/components/TherapyDetailModal';
 // Import all images from assets - YOUR CORRECT PATHS
 import ayurvedaHeroBg from '@/assets/images/ayurveda-hero-bg.jpg';
 import floralBorder from '@/assets/images/floral.png';
-import webLogo from '@/assets/images/web_logo.jpg';
+import webLogo from '@/assets/images/web_logo.png';
 import vamanaTherapy from '@/assets/images/vamana-therapy.png';
 import virechanaTherapy from '@/assets/images/virechana-therapy.png';
 import bastiTherapy from '@/assets/images/basti-therapy.png';
