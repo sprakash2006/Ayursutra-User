@@ -1,122 +1,107 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Bell, 
-  Calendar, 
-  Heart, 
-  User, 
-  Clock, 
-  CheckCircle, 
-  X,
-  Filter,
-  Settings,
-  AlertCircle,
-  Info,
-  Gift,
-  Star
-} from 'lucide-react';
+import * as lucideIcons from "lucide-react";
+import { Bell, CheckCircle, Clock, X } from "lucide-react";
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Navigation from '@/components/Navigation';
 
 const Notifications = () => {
   const [selectedFilter, setSelectedFilter] = useState('all');
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      type: 'appointment',
-      title: 'Upcoming Appointment Reminder',
-      message: 'Your Vamana therapy consultation with Dr. Rajesh Vaidya is scheduled for tomorrow at 10:00 AM.',
-      time: '2 hours ago',
-      read: false,
-      priority: 'high',
-      icon: Calendar,
-      color: 'blue'
-    },
-    {
-      id: 2,
-      type: 'treatment',
-      title: 'Treatment Progress Update',
-      message: 'Day 5 of your Basti therapy is complete. Your progress report is ready for review.',
-      time: '4 hours ago',
-      read: false,
-      priority: 'medium',
-      icon: Heart,
-      color: 'green'
-    },
-    {
-      id: 3,
-      type: 'system',
-      title: 'Profile Update Required',
-      message: 'Please update your emergency contact information in your profile settings.',
-      time: '1 day ago',
-      read: true,
-      priority: 'medium',
-      icon: User,
-      color: 'orange'
-    },
-    {
-      id: 4,
-      type: 'promotion',
-      title: 'Special Offer: 20% Off Panchakarma Package',
-      message: 'Limited time offer on our complete Panchakarma wellness package. Book before September 30th.',
-      time: '2 days ago',
-      read: false,
-      priority: 'low',
-      icon: Gift,
-      color: 'purple'
-    },
-    {
-      id: 5,
-      type: 'appointment',
-      title: 'Appointment Confirmed',
-      message: 'Your Virechana therapy session with Dr. Meera Patel has been confirmed for October 2nd.',
-      time: '3 days ago',
-      read: true,
-      priority: 'high',
-      icon: CheckCircle,
-      color: 'green'
-    },
-    {
-      id: 6,
-      type: 'system',
-      title: 'Treatment Feedback Request',
-      message: 'How was your recent Nasya therapy experience? Share your feedback to help us improve.',
-      time: '5 days ago',
-      read: true,
-      priority: 'low',
-      icon: Star,
-      color: 'yellow'
-    },
-    {
-      id: 7,
-      type: 'alert',
-      title: 'Pre-treatment Guidelines',
-      message: 'Important dietary restrictions to follow 3 days before your Panchakarma treatment begins.',
-      time: '1 week ago',
-      read: false,
-      priority: 'high',
-      icon: AlertCircle,
-      color: 'red'
-    },
-    {
-      id: 8,
-      type: 'info',
-      title: 'New Ayurvedic Article Published',
-      message: 'Read our latest article: "Understanding the Science Behind Panchakarma Detoxification"',
-      time: '1 week ago',
-      read: true,
-      priority: 'low',
-      icon: Info,
-      color: 'blue'
+
+  const user = JSON.parse(sessionStorage.getItem("user") || "{}");
+  const userId = user?.id;
+
+  const [notifications, setNotifications] = useState([]);
+
+  useEffect(() => {
+    if (!userId) return;
+
+    const fetchNotifications = async () => {
+      try {
+        const res = await fetch(`http://localhost:5000/api/notification/${userId}`);
+        const data = await res.json();
+        if (data.success) {
+          setNotifications(data.notifications);
+        } else {
+          console.error("Failed to fetch notifications:", data.error);
+          setNotifications([]);
+        }
+      } catch (err) {
+        console.error("Error fetching notifications:", err);
+        setNotifications([]);
+      }
+    };
+
+    fetchNotifications();
+  }, [userId]);
+
+  const markAsRead = async (id) => {
+    setNotifications(prev =>
+      prev.map(notification =>
+        notification.id === id ? { ...notification, isRead: true } : notification
+      )
+    );
+
+    try {
+      const res = await fetch(`http://localhost:5000/api/notification/read/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = await res.json();
+
+      if (!data.success) {
+        setNotifications(prev =>
+          prev.map(notification =>
+            notification.id === id ? { ...notification, isRead: false } : notification
+          )
+        );
+      }
+    } catch (err) {
+      console.error(err);
     }
-  ]);
+  };
+
+  const markAllAsRead = async () => {
+    setNotifications(prev => prev.map(notification => ({ ...notification, isRead: true })));
+
+    try {
+      const res = await fetch(`http://localhost:5000/api/notification/read-all/${userId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = await res.json();
+      if (!data.success) {
+        setNotifications(prev => prev.map(notification => ({ ...notification, isRead: false })));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const markAllAsUnread = async () => {
+    setNotifications(prev => prev.map(notification => ({ ...notification, isRead: false })));
+
+    try {
+      const res = await fetch(`http://localhost:5000/api/notification/unread-all/${userId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = await res.json();
+      if (!data.success) {
+        setNotifications(prev => prev.map(notification => ({ ...notification, isRead: true })));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const unreadCount = notifications.filter(n => !n.isRead).length;
 
   const filterOptions = [
     { value: 'all', label: 'All', count: notifications.length },
-    { value: 'unread', label: 'Unread', count: notifications.filter(n => !n.read).length },
+    { value: 'unread', label: 'Unread', count: unreadCount },
     { value: 'appointment', label: 'Appointments', count: notifications.filter(n => n.type === 'appointment').length },
     { value: 'treatment', label: 'Treatment', count: notifications.filter(n => n.type === 'treatment').length },
     { value: 'high', label: 'High Priority', count: notifications.filter(n => n.priority === 'high').length }
@@ -125,7 +110,7 @@ const Notifications = () => {
   const filteredNotifications = notifications.filter(notification => {
     switch (selectedFilter) {
       case 'unread':
-        return !notification.read;
+        return !notification.isRead;
       case 'appointment':
         return notification.type === 'appointment';
       case 'treatment':
@@ -136,20 +121,6 @@ const Notifications = () => {
         return true;
     }
   });
-
-  const markAsRead = (id) => {
-    setNotifications(prev =>
-      prev.map(notification =>
-        notification.id === id ? { ...notification, read: true } : notification
-      )
-    );
-  };
-
-  const markAllAsRead = () => {
-    setNotifications(prev =>
-      prev.map(notification => ({ ...notification, read: true }))
-    );
-  };
 
   const deleteNotification = (id) => {
     setNotifications(prev => prev.filter(notification => notification.id !== id));
@@ -164,14 +135,14 @@ const Notifications = () => {
     }
   };
 
-  const getIconColor = (color, read) => {
+  const getIconColor = (color, isRead) => {
     const baseColors = {
-      blue: read ? 'text-blue-400' : 'text-blue-600',
-      green: read ? 'text-green-400' : 'text-green-600',
-      orange: read ? 'text-orange-400' : 'text-orange-600',
-      purple: read ? 'text-purple-400' : 'text-purple-600',
-      yellow: read ? 'text-yellow-400' : 'text-yellow-600',
-      red: read ? 'text-red-400' : 'text-red-600'
+      blue: isRead ? 'text-blue-400' : 'text-blue-600',
+      green: isRead ? 'text-green-400' : 'text-green-600',
+      orange: isRead ? 'text-orange-400' : 'text-orange-600',
+      purple: isRead ? 'text-purple-400' : 'text-purple-600',
+      yellow: isRead ? 'text-yellow-400' : 'text-yellow-600',
+      red: isRead ? 'text-red-400' : 'text-red-600'
     };
     return baseColors[color] || 'text-gray-500';
   };
@@ -210,21 +181,13 @@ const Notifications = () => {
                   <CardTitle className="text-xl text-gray-800">Manage Notifications</CardTitle>
                   <div className="flex items-center space-x-3">
                     <Button
-                      onClick={markAllAsRead}
+                      onClick={unreadCount > 0 ? markAllAsRead : markAllAsUnread}
                       variant="outline"
                       size="sm"
                       className="border-green-300 text-green-700 hover:bg-green-50"
                     >
                       <CheckCircle className="w-4 h-4 mr-2" />
-                      Mark All Read
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="border-gray-300 text-gray-700 hover:bg-gray-50"
-                    >
-                      <Settings className="w-4 h-4 mr-2" />
-                      Settings
+                      {unreadCount > 0 ? "Mark All Read" : "Mark All Unread"}
                     </Button>
                   </div>
                 </div>
@@ -263,7 +226,7 @@ const Notifications = () => {
           <div className="space-y-4">
             <AnimatePresence>
               {filteredNotifications.map((notification, index) => {
-                const IconComponent = notification.icon;
+                const IconComponent = notification.icon ? (lucideIcons[notification.icon] || Bell) : Bell;
                 return (
                   <motion.div
                     key={notification.id}
@@ -274,60 +237,45 @@ const Notifications = () => {
                   >
                     <Card 
                       className={`transition-all duration-300 hover:shadow-md ${
-                        !notification.read 
+                        !notification.isRead 
                           ? 'ring-2 ring-orange-200 bg-white' 
                           : 'bg-gray-50'
                       } ${getPriorityColor(notification.priority)}`}
                     >
                       <CardContent className="p-6">
                         <div className="flex items-start space-x-4">
-                          {/* Icon */}
-                          <div className={`p-3 rounded-full ${
-                            !notification.read ? 'bg-white shadow-sm' : 'bg-gray-200'
-                          }`}>
-                            <IconComponent 
-                              className={`w-6 h-6 ${getIconColor(notification.color, notification.read)}`} 
-                            />
+                          <div className={`p-3 rounded-full ${!notification.isRead ? 'bg-white shadow-sm' : 'bg-gray-200'}`}>
+                            <IconComponent className={`w-6 h-6 ${getIconColor(notification.color, notification.isRead)}`} />
                           </div>
 
-                          {/* Content */}
                           <div className="flex-1 min-w-0">
                             <div className="flex items-start justify-between">
                               <div className="flex-1">
-                                <h3 className={`text-lg font-semibold ${
-                                  !notification.read ? 'text-gray-900' : 'text-gray-600'
-                                } mb-1`}>
+                                <h3 className={`text-lg font-semibold ${!notification.isRead ? 'text-gray-900' : 'text-gray-600'} mb-1`}>
                                   {notification.title}
-                                  {!notification.read && (
-                                    <div className="inline-block w-2 h-2 bg-orange-500 rounded-full ml-2"></div>
-                                  )}
+                                  {!notification.isRead && <div className="inline-block w-2 h-2 bg-orange-500 rounded-full ml-2"></div>}
                                 </h3>
-                                <p className={`${
-                                  !notification.read ? 'text-gray-700' : 'text-gray-500'
-                                } leading-relaxed mb-3`}>
+                                <p className={`${!notification.isRead ? 'text-gray-700' : 'text-gray-500'} leading-relaxed mb-3`}>
                                   {notification.message}
                                 </p>
                                 <div className="flex items-center space-x-4">
                                   <div className="flex items-center space-x-2 text-sm text-gray-500">
                                     <Clock className="w-4 h-4" />
-                                    <span>{notification.time}</span>
+                                    <span>{notification.created_at}</span>
                                   </div>
                                   <Badge 
                                     variant="outline"
-                                    className={`text-xs ${
-                                      notification.priority === 'high' ? 'border-red-300 text-red-700' :
+                                    className={`text-xs ${notification.priority === 'high' ? 'border-red-300 text-red-700' :
                                       notification.priority === 'medium' ? 'border-yellow-300 text-yellow-700' :
-                                      'border-green-300 text-green-700'
-                                    }`}
+                                      'border-green-300 text-green-700'}`}
                                   >
                                     {notification.priority} priority
                                   </Badge>
                                 </div>
                               </div>
 
-                              {/* Action Buttons */}
                               <div className="flex items-center space-x-2 ml-4">
-                                {!notification.read && (
+                                {!notification.isRead && (
                                   <Button
                                     onClick={() => markAsRead(notification.id)}
                                     variant="outline"
