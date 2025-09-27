@@ -228,6 +228,7 @@ const Profile = () => {
                           value={userProfile.email}
                           onChange={(e) => setUserProfile({ ...userProfile, email: e.target.value })}
                           placeholder="Email"
+                          disabled
                         />
                         <Input
                           value={userProfile.phone}

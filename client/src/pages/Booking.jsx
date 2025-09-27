@@ -87,7 +87,8 @@ const handleSubmit = async () => {
       therapy_id: selectedTherapy.id,
       Doctor_id: selectedDoctor.id,
       date: selectedDate,
-      time: formattedTime
+      time: formattedTime,
+      amount: Number(selectedDoctor.fees)
     })
   });
 
