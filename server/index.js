@@ -1,5 +1,5 @@
 import express from "express";
-// import dotenv from "dotenv";
+import dotenv from "dotenv";
 import morgan from "morgan";
 import cors from "cors";
 import authRoutes from "./routes/loginRoutes.js";
@@ -7,7 +7,7 @@ import profileRoutes from "./routes/profileRoutes.js";
 import addBookingRoutes from "./routes/addBookingRoutes.js";
 import notificationsRoutes from "./routes/notificationsRoutes.js";
 
-// dotenv.config();
+dotenv.config();
 const app = express();
 
 // Middleware
