@@ -1,4 +1,5 @@
 import { supabase } from "../supabaseClient.js";
+import { transporter } from "../mailTransporter.js" 
 
 // ✅ Get therapies
 export const getTherapies = async (req, res) => {
@@ -62,7 +63,21 @@ export const createBooking = async (req, res) => {
 
     const booking = bookingData[0];
 
-    // 2️⃣ Get Therapy Name safely
+    // 2️⃣ Fetch Patient Info (to get email and name)
+    const { data: patientData, error: patientError } = await supabase
+      .from('patients')
+      .select('name, email')
+      .eq('id', patient_id)
+      .single();
+
+    if (patientError || !patientData) {
+      return res.status(400).json({ error: patientError?.message || "Patient not found" });
+    }
+
+    const userName = patientData.name;
+    const userEmail = patientData.email;
+
+    // 3️⃣ Get Therapy Name
     const { data: therapyData, error: therapyError } = await supabase
       .from('therapies')
       .select('name')
@@ -75,17 +90,16 @@ export const createBooking = async (req, res) => {
 
     const therapyName = therapyData.name;
 
-    // 3️⃣ Format date and time
-    const bookingDate = new Date(`${date}T${time}`); // combine date and time
-    const formattedDate = bookingDate.toLocaleDateString("en-GB", { day: 'numeric', month: 'long', year: 'numeric' }); // e.g., 4 November 2025
-
+    // 4️⃣ Format Date & Time
+    const bookingDate = new Date(`${date}T${time}`);
+    const formattedDate = bookingDate.toLocaleDateString("en-GB", { day: 'numeric', month: 'long', year: 'numeric' });
     let hours = bookingDate.getHours();
     const minutes = bookingDate.getMinutes();
     const ampm = hours >= 12 ? "PM" : "AM";
-    hours = hours % 12 || 12; // convert 0 -> 12
+    hours = hours % 12 || 12;
     const formattedTime = `${hours}:${minutes.toString().padStart(2, '0')} ${ampm}`;
 
-    // 4️⃣ Create Notification
+    // 5️⃣ Create Notification
     const notificationMessage = `Your booking for ${therapyName} therapy on ${formattedDate} at ${formattedTime} at AyurSutra has been created.`;
 
     const { data: notificationData, error: notificationError } = await supabase
@@ -101,15 +115,36 @@ export const createBooking = async (req, res) => {
         color: 'green'
       }]);
 
-    if (notificationError) {
-      return res.status(400).json({ error: notificationError.message });
-    }
-
     const notification = notificationData && notificationData[0] ? notificationData[0] : null;
 
-    // ✅ Respond safely
+    // 6️⃣ Send Email
+      const mailOptions = {
+        from: 'prakashswami150569@gmail.com',
+        to: userEmail,
+        subject: 'Booking Registered!',
+        html: `
+          <h2>Hello ${userName},</h2>
+          
+          <p>Your booking for <b>${therapyName}</b> therapy on <b>${formattedDate}</b> at <b>${formattedTime}</b> has been booked.</p>
+          
+          <h3>Pre-care instructions will be shared with you soon.</h3>
+          
+          <p>Thank you,<br/>AyurSutra</p>
+        `
+      };
+
+
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.error('Error sending email:', error);
+      } else {
+        console.log('Email sent:', info.response);
+      }
+    });
+
+    // 7️⃣ Respond to client
     res.status(200).json({
-      message: 'Booking created and notification added',
+      message: 'Booking created, notification added, and email sent!',
       booking,
       notification
     });
@@ -119,4 +154,3 @@ export const createBooking = async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 };
-
