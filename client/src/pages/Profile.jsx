@@ -40,7 +40,7 @@ const Profile = () => {
 
     const fetchPatient = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/patient/${userId}`);
+        const res = await fetch(`https://ayursutra-user-backend.vercel.app/api/patient/${userId}`);
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "Failed to fetch patient data");
 
@@ -65,7 +65,7 @@ const Profile = () => {
   // Save updated profile
   const handleSaveChanges = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/api/patient/updatePatient/${userId}`, {
+      const res = await fetch(`https://ayursutra-user-backend.vercel.app/api/patient/updatePatient/${userId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -101,7 +101,7 @@ const Profile = () => {
   useEffect(() => {
     const fetchBookingData = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/patient/userBookings/${userId}`);
+        const res = await fetch(`https://ayursutra-user-backend.vercel.app/api/patient/userBookings/${userId}`);
         if (!res.ok) throw new Error("Failed to fetch user bookings");
 
         const data = await res.json();
@@ -120,7 +120,7 @@ const Profile = () => {
   useEffect(() => {
     const fetchRecordData = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/patient/userRecords/${userId}`);
+        const res = await fetch(`https://ayursutra-user-backend.vercel.app/api/patient/userRecords/${userId}`);
         if (!res.ok) throw new Error("Failed to fetch user bookings");
 
         const data = await res.json();

@@ -35,7 +35,7 @@ const Booking = () => {
   useEffect(() => {
     const fetchTherapies = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/addBookings/getTherapy");
+        const response = await fetch("https://ayursutra-user-backend.vercel.app/api/addBookings/getTherapy");
         if (!response.ok) throw new Error("Failed to fetch therapies");
         const data = await response.json();
         setTherapies(data);
@@ -51,7 +51,7 @@ const Booking = () => {
   useEffect(() => {
     const fetchTherapies = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/addBookings/getDoctors");
+        const response = await fetch("https://ayursutra-user-backend.vercel.app/api/addBookings/getDoctors");
         if (!response.ok) throw new Error("Failed to fetch therapies");
         const data = await response.json();
         setDoctors(data);
@@ -79,7 +79,7 @@ const handleSubmit = async () => {
   if (period === "AM" && hours === 12) hours = 0;
   const formattedTime = `${hours.toString().padStart(2,'0')}:${minutePart}:00`;
 
-  const response = await fetch('http://localhost:5000/api/addBookings/bookings', {
+  const response = await fetch('https://ayursutra-user-backend.vercel.app/api/addBookings/bookings', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

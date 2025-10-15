@@ -22,7 +22,7 @@ const Notifications = () => {
 
     const fetchNotifications = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/notification/${userId}`);
+        const res = await fetch(`https://ayursutra-user-backend.vercel.app/api/notification/${userId}`);
         const data = await res.json();
         if (data.success) setNotifications(data.notifications);
         else setNotifications([]);
@@ -43,7 +43,7 @@ const Notifications = () => {
     );
 
     try {
-      const res = await fetch(`http://localhost:5000/api/notification/read/${id}`, {
+      const res = await fetch(`https://ayursutra-user-backend.vercel.app/api/notification/read/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
       });
@@ -69,7 +69,7 @@ const Notifications = () => {
 
     try {
       const res = await fetch(
-        `http://localhost:5000/api/notification/${hasUnread ? 'read-all' : 'unread-all'}/${userId}`,
+        `https://ayursutra-user-backend.vercel.app/api/notification/${hasUnread ? 'read-all' : 'unread-all'}/${userId}`,
         { method: "PATCH", headers: { "Content-Type": "application/json" } }
       );
       const data = await res.json();
