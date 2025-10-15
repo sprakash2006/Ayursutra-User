@@ -739,19 +739,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Test Button for Modal (REMOVE AFTER TESTING) */}
-      <div className="text-center py-12">
-        <Button 
-          onClick={() => {
-            console.log('🔥 Test button clicked');
-            console.log('🔥 First therapy:', therapies[0]);
-            openTherapyModal(therapies[0]);
-          }}
-          className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-4"
-        >
-          🧪 Test Modal (Vamana)
-        </Button>
-      </div>
 
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-20">
